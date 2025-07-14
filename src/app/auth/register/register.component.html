@@ -1,0 +1,187 @@
+<!-- src/app/auth/register/register.component.html -->
+<div class="login-wrapper">
+  <div class="overlay"></div>
+
+  <mat-card class="login-card">
+    <mat-card-header>
+      <mat-card-title>Register</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content [formGroup]="form">
+      <!-- Nombre -->
+      <mat-form-field appearance="outline" class="full-width spaced">
+        <mat-label>Nombre *</mat-label>
+        <input
+          matInput
+          formControlName="firstName"
+          autocomplete="given-name"
+        />
+        <mat-error
+          *ngIf="
+            f['firstName'].invalid &&
+            (f['firstName'].touched || submitted)
+          "
+        >
+          Nombre es requerido
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Apellidos -->
+      <mat-form-field appearance="outline" class="full-width spaced">
+        <mat-label>Apellidos *</mat-label>
+        <input
+          matInput
+          formControlName="lastName"
+          autocomplete="family-name"
+        />
+        <mat-error
+          *ngIf="
+            f['lastName'].invalid &&
+            (f['lastName'].touched || submitted)
+          "
+        >
+          Apellidos son requeridos
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Teléfono -->
+      <mat-form-field appearance="outline" class="full-width spaced">
+        <mat-label>Teléfono *</mat-label>
+        <input
+          matInput
+          formControlName="phone"
+          autocomplete="tel"
+        />
+        <mat-error
+          *ngIf="
+            f['phone'].invalid &&
+            (f['phone'].touched || submitted)
+          "
+        >
+          {{ f['phone'].hasError('required')
+             ? 'Teléfono es requerido'
+             : 'Formato de teléfono inválido' }}
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Email -->
+      <mat-form-field appearance="outline" class="full-width spaced">
+        <mat-label>Email *</mat-label>
+        <input
+          matInput
+          formControlName="email"
+          autocomplete="email"
+        />
+        <mat-error
+          *ngIf="
+            f['email'].invalid &&
+            (f['email'].touched || submitted)
+          "
+        >
+          {{ f['email'].hasError('required')
+             ? 'Email es requerido'
+             : 'Email inválido' }}
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Password -->
+      <mat-form-field appearance="outline" class="full-width spaced">
+        <mat-label>Password *</mat-label>
+        <input
+          matInput
+          [type]="hide ? 'password' : 'text'"
+          formControlName="password"
+          autocomplete="new-password"
+        />
+        <button
+          mat-icon-button
+          matSuffix
+          (click)="hide = !hide"
+          [attr.aria-label]="'Mostrar contraseña'"
+          [attr.aria-pressed]="!hide"
+        >
+          <mat-icon>{{ hide ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        <mat-error
+          *ngIf="
+            f['password'].invalid &&
+            (f['password'].touched || submitted)
+          "
+        >
+          {{ f['password'].hasError('required')
+             ? 'Password es requerido'
+             : 'Mínimo 6 caracteres' }}
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Confirmar Password -->
+      <mat-form-field appearance="outline" class="full-width spaced">
+        <mat-label>Confirmar Password *</mat-label>
+        <input
+          matInput
+          [type]="hideConfirm ? 'password' : 'text'"
+          formControlName="confirmPassword"
+          autocomplete="new-password"
+        />
+        <button
+          mat-icon-button
+          matSuffix
+          (click)="hideConfirm = !hideConfirm"
+          [attr.aria-label]="'Mostrar contraseña'"
+          [attr.aria-pressed]="!hideConfirm"
+        >
+          <mat-icon>{{ hideConfirm ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        <mat-error
+          *ngIf="
+            form.hasError('noMatch') &&
+            (f['confirmPassword'].touched || submitted)
+          "
+        >
+          Las contraseñas no coinciden
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Error banner -->
+      <div *ngIf="error" class="error-banner">
+        {{ error }}
+      </div>
+
+      <!-- Botones principales -->
+      <div class="actions spaced">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="submit()"
+          [disabled]="form.invalid || loading"
+        >
+          <ng-container *ngIf="!loading">Register</ng-container>
+          <mat-progress-spinner
+            *ngIf="loading"
+            mode="indeterminate"
+            diameter="20"
+          ></mat-progress-spinner>
+        </button>
+
+        <button
+          mat-raised-button
+          color="primary"
+          routerLink="/login"
+          type="button"
+          [disabled]="loading"
+        >
+          Login
+        </button>
+
+        <button
+          mat-raised-button
+          color="warn"
+          (click)="loginWithGoogle()"
+          [disabled]="loading"
+        >
+          Google
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
