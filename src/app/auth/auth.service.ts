@@ -1,116 +1,171 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   Auth,
-  authState,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithPopup,
+  signOut,
+  User,
+  UserCredential,
   GoogleAuthProvider,
-  setPersistence,
-  browserLocalPersistence,
-  browserSessionPersistence
+  sendPasswordResetEmail,
+  signInWithPopup,
+  updateProfile
 } from '@angular/fire/auth';
 import {
   Firestore,
   doc,
-  docData,
   setDoc,
-  getDoc
+  getDoc,
+  docData
 } from '@angular/fire/firestore';
-import { Observable, of, from } from 'rxjs';
-import { switchMap, map, catchError, take } from 'rxjs/operators';
+import { Observable, of, switchMap, map, throwError } from 'rxjs';
 
-export type Role = 'user' | 'admin';
+export type Role = 'admin' | 'user';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class AuthService {
-  public role$: Observable<Role | null>;
-  private _roleCache: Role | null = null;
+  private auth = inject(Auth);
+  private firestore = inject(Firestore);
 
-  constructor(private auth: Auth, private afs: Firestore) {
-    this.role$ = authState(this.auth).pipe(
-      switchMap(user => {
-        if (!user) {
-          this._roleCache = null;
-          return of(null);
-        }
-        return docData(doc(this.afs, 'users', user.uid)).pipe(
+  // Observables para guards
+  user$: Observable<User | null>;
+  role$: Observable<Role>;
+
+  constructor() {
+    // Escucha de cambios en sesión
+    this.user$ = new Observable<User | null>((subscriber) => {
+      return this.auth.onAuthStateChanged(subscriber);
+    });
+
+    // Rol y validación de bloqueo desde Firestore
+    this.role$ = this.user$.pipe(
+      switchMap((user) => {
+        if (!user) return of('user' as Role); // rol por defecto si no hay sesión
+        const ref = doc(this.firestore, 'users', user.uid);
+        return docData(ref).pipe(
           map((data: any) => {
-            const role = (data?.['role'] as Role) ?? 'user';
-            this._roleCache = role;
-            return role;
+            if (!data) return 'user' as Role;
+
+            // 👇 Si está bloqueado, lanzamos error
+            if (data.blocked) {
+              throw new Error('🚫 Tu cuenta ha sido bloqueada por un administrador.');
+            }
+
+            return (data?.role as Role) || 'user';
           })
         );
       })
     );
-    // Inicializar cache de rol
-    this.role$.pipe(take(1)).subscribe();
   }
 
-  /** Recarga el cache de rol manualmente */
-  initRoleCache(): void {
-    this.role$.pipe(take(1)).subscribe();
+  // Registro con email y contraseña
+  async register(email: string, password: string, displayName: string, phone?: string) {
+    try {
+      const cred: UserCredential = await createUserWithEmailAndPassword(this.auth, email, password);
+
+      if (cred.user) {
+        await updateProfile(cred.user, { displayName });
+
+        // Guardamos datos en Firestore
+        await setDoc(doc(this.firestore, 'users', cred.user.uid), {
+          uid: cred.user.uid,
+          email: cred.user.email,
+          displayName,
+          phone: phone || '',
+          role: 'user', // 👈 por defecto
+          blocked: false, // 👈 inicialmente no bloqueado
+          createdAt: new Date()
+        });
+      }
+
+      return cred;
+    } catch (error: any) {
+      console.error('Error en register:', error.message);
+      throw error;
+    }
   }
 
-  /** Verificación síncrona de autenticación */
-  isLoggedInSync(): boolean {
-    return this._roleCache !== null;
+  // Inicio de sesión con email y contraseña
+  async login(email: string, password: string) {
+    try {
+      const cred = await signInWithEmailAndPassword(this.auth, email, password);
+
+      // Validamos si está bloqueado
+      const userRef = doc(this.firestore, 'users', cred.user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists() && userSnap.data()?.['blocked']) {
+
+        await this.logout();
+        throw new Error('🚫 Tu cuenta está bloqueada. Contacta al administrador.');
+      }
+
+      return cred;
+    } catch (error: any) {
+      console.error('Error en login:', error.message);
+      throw error;
+    }
   }
 
-  /** Verificación síncrona de rol admin */
-  isAdminSync(): boolean {
-    return this._roleCache === 'admin';
+  // Inicio de sesión con Google
+  async googleLogin() {
+    try {
+      const provider = new GoogleAuthProvider();
+      const cred = await signInWithPopup(this.auth, provider);
+
+      if (cred.user) {
+        const userRef = doc(this.firestore, 'users', cred.user.uid);
+        const userSnap = await getDoc(userRef);
+
+        if (!userSnap.exists()) {
+          await setDoc(userRef, {
+            uid: cred.user.uid,
+            email: cred.user.email,
+            displayName: cred.user.displayName || '',
+            photoURL: cred.user.photoURL || '',
+            phone: cred.user.phoneNumber || '',
+            role: 'user', // 👈 siempre por defecto en Google login
+            blocked: false,
+            createdAt: new Date()
+          });
+        } else if (userSnap.data()?.['blocked']) {
+
+          await this.logout();
+          throw new Error('🚫 Tu cuenta está bloqueada. Contacta al administrador.');
+        }
+      }
+
+      return cred;
+    } catch (error: any) {
+      console.error('Error en googleLogin:', error.message);
+      throw error;
+    }
+  }
+  // Resetear contraseña
+async sendPasswordReset(email: string) {
+  try {
+    return await sendPasswordResetEmail(this.auth, email);
+  } catch (error: any) {
+    console.error('Error en reset password:', error.message);
+    throw error;
+  }
+}
+
+
+  // Cerrar sesión
+  async logout() {
+    try {
+      return await signOut(this.auth);
+    } catch (error: any) {
+      console.error('Error en logout:', error.message);
+      throw error;
+    }
   }
 
-  /** Login con email/password y persistencia */
-  login(email: string, password: string, remember = false): Observable<boolean> {
-    const persistence = remember
-      ? browserLocalPersistence
-      : browserSessionPersistence;
-
-    return from(setPersistence(this.auth, persistence)).pipe(
-      switchMap(() =>
-        from(signInWithEmailAndPassword(this.auth, email, password))
-      ),
-      switchMap(cred => from(getDoc(doc(this.afs, 'users', cred.user!.uid)))),
-      map(snap => {
-        const role = (snap.data()?.['role'] as Role) ?? 'user';
-        this._roleCache = role;
-        return true;
-      }),
-      catchError(() => of(false))
-    );
-  }
-
-  /** Registro con email/password y creación de documento de usuario */
-  signup(email: string, password: string): Observable<void> {
-    return from(
-      createUserWithEmailAndPassword(this.auth, email, password)
-    ).pipe(
-      switchMap(cred =>
-        from(
-          setDoc(doc(this.afs, 'users', cred.user!.uid), {
-            role: 'user',
-            blocked: false
-          })
-        )
-      )
-    );
-  }
-
-  /** Login con Google */
-  loginWithGoogle(): Observable<boolean> {
-    const provider = new GoogleAuthProvider();
-    return from(signInWithPopup(this.auth, provider)).pipe(
-      map(() => true),
-      catchError(() => of(false))
-    );
-  }
-
-  /** Cerrar sesión y limpiar cache de rol */
-  logout(): Promise<void> {
-    return this.auth.signOut().then(() => {
-      this._roleCache = null;
-    });
+  // Usuario actual sincrónico
+  getCurrentUser() {
+    return this.auth.currentUser;
   }
 }

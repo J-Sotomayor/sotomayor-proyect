@@ -1,0 +1,36 @@
+.profile-card {
+  max-width: 500px;            /* Card más ancho */
+  margin: 2rem auto;           /* Centrado automático */
+  padding: 2rem;               /* Espaciado dentro del card */
+}
+
+.profile-title {
+  text-align: center;          /* Centrado del título */
+  font-size: 1.5rem;           /* Tamaño de fuente más grande */
+  font-weight: bold;           /* Negrita para resaltar */
+}
+
+.profile-content {
+  margin-top: 1rem;            /* Separación entre título y contenido */
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 1.5rem;       /* Espaciado entre los campos */
+}
+
+button[mat-raised-button] {
+  margin-top: 1rem;            /* Espaciado adicional al botón */
+}
+/* Estilo para el snackbar (alerta) */
+.success-snackbar {
+  background-color: #4caf50;  /* Color verde para el éxito */
+  color: white;               /* Texto blanco */
+  font-weight: bold;          /* Negrita para resaltar */
+}
+
+.error-snackbar {
+  background-color: #f44336;  /* Color rojo para error */
+  color: white;               /* Texto blanco */
+  font-weight: bold;          /* Negrita para resaltar */
+}

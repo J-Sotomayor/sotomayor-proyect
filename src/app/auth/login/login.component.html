@@ -1,82 +1,47 @@
-<div class="login-wrapper">
-  <div class="overlay"></div>
-
-  <mat-card class="login-card" [formGroup]="form">
-    <mat-card-header>
-      <mat-card-title>Login</mat-card-title>
-    </mat-card-header>
-
+<div class="login-container">
+  <mat-card>
+    <mat-card-title>Iniciar Sesión</mat-card-title>
     <mat-card-content>
-      <!-- Email -->
-      <mat-form-field appearance="outline" class="full-width spaced">
-        <mat-label>Email *</mat-label>
-        <input matInput formControlName="email" autocomplete="email" />
-        <mat-error *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
-          {{ form.get('email')?.hasError('required') ? 'Email es requerido' : 'Email inválido' }}
-        </mat-error>
-      </mat-form-field>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email" type="email" />
+          <mat-error *ngIf="form.controls['email'].hasError('required')">
+            El email es obligatorio
+          </mat-error>
+          <mat-error *ngIf="form.controls['email'].hasError('email')">
+            Debe ser un email válido
+          </mat-error>
+        </mat-form-field>
 
-      <!-- Password -->
-      <mat-form-field appearance="outline" class="full-width spaced">
-        <mat-label>Password *</mat-label>
-        <input
-          matInput
-          [type]="hide ? 'password' : 'text'"
-          formControlName="password"
-          autocomplete="current-password"
-        />
-        <button
-          mat-icon-button
-          matSuffix
-          (click)="hide = !hide"
-          [attr.aria-label]="'Mostrar contraseña'"
-          [attr.aria-pressed]="!hide"
-        >
-          <mat-icon>{{ hide ? 'visibility_off' : 'visibility' }}</mat-icon>
-        </button>
-        <mat-error *ngIf="form.get('password')?.invalid && form.get('password')?.touched">
-          Password es requerido
-        </mat-error>
-      </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Contraseña</mat-label>
+          <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" />
+          <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="form.controls['password'].hasError('required')">
+            La contraseña es obligatoria
+          </mat-error>
+          <mat-error *ngIf="form.controls['password'].hasError('minlength')">
+            Mínimo 6 caracteres
+          </mat-error>
+        </mat-form-field>
 
-      <!-- Remember me -->
-      <div class="extras full-width spaced">
-        <mat-checkbox formControlName="remember">Recuérdame</mat-checkbox>
-      </div>
-
-      <!-- Error banner -->
-      <div *ngIf="error" class="error-banner full-width spaced">{{ error }}</div>
-
-      <!-- Actions -->
-      <div class="actions spaced full-width">
-        <button
-          mat-raised-button
-          color="primary"
-          (click)="submit()"
-          [disabled]="loading"
-        >
-          Login
+        <button mat-raised-button color="primary" class="full-width" type="submit" [disabled]="loading">
+          {{ loading ? 'Iniciando...' : 'Iniciar Sesión' }}
         </button>
 
-        <button
-          mat-raised-button
-          color="primary"
-          routerLink="/register"
-          type="button"
-          [disabled]="loading"
-        >
-          Register
+        <button mat-raised-button color="accent" class="full-width google-btn" type="button" (click)="loginWithGoogle()" [disabled]="loading">
+          <mat-icon>google</mat-icon> Iniciar con Google
         </button>
 
-        <button
-          mat-raised-button
-          color="accent"
-          (click)="loginWithGoogle()"
-          [disabled]="loading"
-        >
-          Google
-        </button>
-      </div>
+        <p class="register-link">
+          ¿No tienes cuenta?
+          <a (click)="goToRegister()">Regístrate aquí</a>
+        </p>
+      </form>
     </mat-card-content>
   </mat-card>
 </div>

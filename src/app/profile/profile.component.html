@@ -1,0 +1,57 @@
+<mat-card class="profile-card">
+  <!-- Título centrado -->
+  <mat-card-title class="profile-title">Mi Perfil</mat-card-title>
+
+  <mat-card-content class="profile-content">
+    <form [formGroup]="form" (ngSubmit)="saveAll()">
+
+      <!-- Nombre -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Nombre</mat-label>
+        <input matInput formControlName="name" />
+        <button
+          mat-icon-button
+          matSuffix
+          aria-label="Editar nombre"
+          (click)="toggleEditName(); $event.preventDefault()"
+        >
+          <mat-icon>{{ editingName ? 'save' : 'edit' }}</mat-icon>
+        </button>
+        <mat-error *ngIf="form.get('name')?.hasError('required')">
+          El nombre es obligatorio
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Teléfono -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Teléfono</mat-label>
+        <input matInput formControlName="phone" />
+        <button
+          mat-icon-button
+          matSuffix
+          aria-label="Editar teléfono"
+          (click)="toggleEditPhone(); $event.preventDefault()"
+        >
+          <mat-icon>{{ editingPhone ? 'save' : 'edit' }}</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <!-- Email (solo lectura) -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email</mat-label>
+        <input matInput formControlName="email" [disabled]="true" />
+      </mat-form-field>
+
+      <!-- Rol (solo lectura) -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Rol</mat-label>
+        <input matInput formControlName="role" [disabled]="true" />
+      </mat-form-field>
+
+      <!-- Guardar Cambios -->
+      <button mat-raised-button color="primary" [disabled]="form.invalid">
+        Guardar Cambios
+      </button>
+    </form>
+  </mat-card-content>
+</mat-card>

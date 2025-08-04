@@ -1,5 +1,3 @@
-/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
-/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
 {
   "compileOnSave": false,
   "compilerOptions": {
@@ -12,8 +10,12 @@
     "isolatedModules": true,
     "experimentalDecorators": true,
     "importHelpers": true,
-    "target": "ES2022",
-    "module": "preserve"
+    "target": "ES2022",  // Mantenemos ES2022 para que se compile a la versión más moderna de JS
+    "module": "es2020",  // Cambié "preserve" a "es2020" para asegurarse de que se resuelvan los módulos correctamente
+    "moduleResolution": "node",  // Asegura que las importaciones de módulos se resuelvan de manera adecuada
+    "esModuleInterop": true,  // Permite interoperabilidad con módulos CommonJS y ES6
+    "skipDefaultLibCheck": true,
+    "outDir": "./out-tsc"  // Directorio de salida para los archivos compilados
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

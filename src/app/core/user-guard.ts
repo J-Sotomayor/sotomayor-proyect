@@ -1,20 +1,18 @@
-import { Injectable } from '@angular/core';
-import { CanActivate, Router, UrlTree } from '@angular/router';
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+import { map, tap } from 'rxjs/operators';
 import { AuthService } from '../auth/auth.service';
-import { Observable } from 'rxjs';
-import { map, take } from 'rxjs/operators';
 
-@Injectable({ providedIn: 'root' })
-export class UserGuard implements CanActivate {
-  constructor(private auth: AuthService, private router: Router) {}
+export const UserGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
 
-  canActivate(): Observable<boolean | UrlTree> {
-    return this.auth.role$.pipe(
-      take(1),
-      map(role => {
-        if (role !== null) return true;
-        return this.router.createUrlTree(['/login']);
-      })
-    );
-  }
-}
+  return auth.role$.pipe(
+    map((role) => role === 'user' || role === 'admin'), // 👈 admin también puede pasar
+    tap((isUser) => {
+      if (!isUser) {
+        router.navigate(['/login']); // redirige si no es user
+      }
+    })
+  );
+};

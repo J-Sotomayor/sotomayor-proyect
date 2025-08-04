@@ -1,29 +1,32 @@
-// src/app/shared/nav.component.ts
-import { Component }     from '@angular/core';
-import { CommonModule }  from '@angular/common';
-import { RouterModule }  from '@angular/router';
-import { Observable }    from 'rxjs';
-import { AuthService }   from '../auth/auth.service';
-import { MaterialModule } from './material.module';
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule, Router } from '@angular/router';
+import { AuthService } from '../auth/auth.service';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-nav',
   standalone: true,
-  imports: [CommonModule, RouterModule, MaterialModule],
+  imports: [CommonModule, RouterModule, MatToolbarModule, MatButtonModule, MatIconModule],
   templateUrl: './nav.component.html',
   styleUrls: ['./nav.component.scss']
 })
 export class NavComponent {
-  role$: Observable<'user'|'admin'|null>;
+  isLoggedIn$: Observable<boolean>;
+  isAdmin$: Observable<boolean>;
 
-  constructor(private auth: AuthService) {
-    // Ahora sí se puede usar this.auth
-    this.role$ = this.auth.role$;
+  // router ahora es PUBLIC para poder usarlo en el HTML
+  constructor(public auth: AuthService, public router: Router) {
+    this.isLoggedIn$ = this.auth.user$.pipe(map(user => !!user));
+    this.isAdmin$ = this.auth.role$.pipe(map(role => role === 'admin'));
   }
 
-  logout() {
-    this.auth.logout().then(() => {
-      // Opcional: redirigir a /login
-    });
+  async logout() {
+    await this.auth.logout();
+    this.router.navigate(['/login']);
   }
 }

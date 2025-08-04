@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  firebase: {
+  firebaseConfig: {  // Cambié de 'firebase' a 'firebaseConfig'
     apiKey: "AIzaSyCQx4eOo__abW8EZscu_J08pI4YGxpGjQQ",
     authDomain: "note-manager-proyect.firebaseapp.com",
     projectId: "note-manager-proyect",

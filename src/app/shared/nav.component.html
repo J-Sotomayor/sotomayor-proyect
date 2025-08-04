@@ -1,19 +1,23 @@
-<mat-toolbar color="primary">  
-  <span class="logo">Notes</span>
+<mat-toolbar color="primary" class="nav-toolbar">
+  <span class="logo" (click)="router.navigate(['/notes'])">📒 Notes</span>
+
   <span class="spacer"></span>
 
-  <button mat-button routerLink="/notes" *ngIf="(role$ | async) !== null">
-    Mis Notas
-  </button>
+  <ng-container *ngIf="isLoggedIn$ | async">
+    <button mat-button routerLink="/profile">
+      <mat-icon>person</mat-icon> Perfil
+    </button>
 
-  <button mat-button routerLink="/admin" *ngIf="(role$ | async) === 'admin'">
-    Admin Panel
-  </button>
+    <button mat-button routerLink="/notes">
+      <mat-icon>note</mat-icon> Notas
+    </button>
 
-  <button mat-icon-button [matMenuTriggerFor]="userMenu">
-    <mat-icon>account_circle</mat-icon>
-  </button>
-  <mat-menu #userMenu="matMenu">
-    <button mat-menu-item routerLink="/profile">Perfil</button>
-    <button mat-menu-item (click)="logout()">Salir</button>
-</mat-menu>
+    <button mat-button *ngIf="isAdmin$ | async" routerLink="/admin">
+      <mat-icon>admin_panel_settings</mat-icon> Admin
+    </button>
+
+    <button mat-button color="warn" (click)="logout()">
+      <mat-icon>logout</mat-icon> Cerrar sesión
+    </button>
+  </ng-container>
+</mat-toolbar>
